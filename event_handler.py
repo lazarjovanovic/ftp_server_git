@@ -2,7 +2,7 @@ import os
 from watchdog.events import RegexMatchingEventHandler
 import json
 from PIL import Image
-from imageai.Detection.Custom import CustomObjectDetection
+#from imageai.Detection.Custom import CustomObjectDetection
 
 
 class ProcessEventHandler(RegexMatchingEventHandler):

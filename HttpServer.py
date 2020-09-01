@@ -14,7 +14,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-        f = open('D:\\pristiglaSlikaANDROID.jpg', 'wb')
+        f = open('C:\\Users\\jovan\\PycharmProjects\\ftp_server_git\\server_files\\slika.jpg', 'wb')
         f.write(body)
         f.close()
 
@@ -24,9 +24,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 def start():
     print("HTTP Server started..")
-    httpd = HTTPServer(('192.168.0.12', 8004), SimpleHTTPRequestHandler)
+    httpd = HTTPServer(('192.168.1.5', 8004), SimpleHTTPRequestHandler)
     httpd.serve_forever()
     print("HTTP Server stoped..")
-
-
-start()
