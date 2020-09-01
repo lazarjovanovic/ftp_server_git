@@ -1,9 +1,18 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from event_handler import ProcessEventHandler
+from watchdog.observers import Observer
+import time
+import _thread
 import os
-FTP_DIRECTORY = os.getcwd() + "\\server_files\\"
+DATA_DIRECTORY = os.getcwd() + "\\server_files\\"
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+
+    def do_CONNECT(self):
+        self.send_response(200, "HTTP/1.1")
+        self.end_headers()
+        self.wfile.write(b'Connection')
 
     def do_GET(self):
         self.send_response(200)
@@ -21,7 +30,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-        f = open(FTP_DIRECTORY + request_user + '_' + request_image, 'wb')
+        f = open(DATA_DIRECTORY + request_user + '_' + request_image, 'wb')
         f.write(body)
         f.close()
 
@@ -31,9 +40,24 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 def start():
     print("HTTP Server started..")
-    if not os.path.exists(FTP_DIRECTORY):
-        os.mkdir(FTP_DIRECTORY)
+    if not os.path.exists(DATA_DIRECTORY):
+        os.mkdir(DATA_DIRECTORY)
 
     httpd = HTTPServer(('192.168.1.5', 8004), SimpleHTTPRequestHandler)
-    httpd.serve_forever()
+    # httpd.serve_forever()
+    _thread.start_new_thread(httpd.serve_forever, tuple())
+
+    # watchdog
+    process_event_handler = ProcessEventHandler()
+    observer = Observer()
+    observer.schedule(process_event_handler, DATA_DIRECTORY, recursive=True)
+
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
     print("HTTP Server stoped..")
