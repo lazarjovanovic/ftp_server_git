@@ -25,8 +25,10 @@ class ProcessEventHandler(RegexMatchingEventHandler):
         for detection in detections:
             print(detection["name"], " : ", detection["percentage_probability"], " : ", detection["box_points"])
 
-    def process(self, event):
-        image_path = event.src_path
+    #def process(self, event):
+    def process(self, path):
+        #image_path = event.src_path
+        image_path = path
         image_path_new = image_path.split('.')[0] + '.png'
         image_path_detected = image_path.split('.')[0] + '_detected.png'
 

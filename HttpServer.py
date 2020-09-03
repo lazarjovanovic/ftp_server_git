@@ -4,11 +4,11 @@ from watchdog.observers import Observer
 import time
 import _thread
 import os
+from event_handler import ProcessEventHandler
 DATA_DIRECTORY = os.getcwd() + "\\server_files\\"
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-
     def do_CONNECT(self):
         self.send_response(200, "HTTP/1.1")
         self.end_headers()
@@ -35,6 +35,10 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         f.close()
 
         response = 'Image received, starting processing'.encode()
+
+        process_event_handler = ProcessEventHandler()
+        process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image)
+
         self.wfile.write(response)
 
 
@@ -45,19 +49,21 @@ def start():
 
     httpd = HTTPServer(('192.168.1.5', 8004), SimpleHTTPRequestHandler)
     # httpd.serve_forever()
-    _thread.start_new_thread(httpd.serve_forever, tuple())
+    #_thread.start_new_thread(httpd.serve_forever, tuple())
+    httpd.serve_forever()
+    while True:
+        pass
 
     # watchdog
-    process_event_handler = ProcessEventHandler()
-    observer = Observer()
-    observer.schedule(process_event_handler, DATA_DIRECTORY, recursive=True)
-
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
-
+    # process_event_handler = ProcessEventHandler()
+    # observer = Observer()
+    # observer.schedule(process_event_handler, DATA_DIRECTORY, recursive=True)
+    #
+    # observer.start()
+    # try:
+    #     while True:
+    #         time.sleep(1)
+    # except KeyboardInterrupt:
+    #     observer.stop()
+    # observer.join()
     print("HTTP Server stoped..")
