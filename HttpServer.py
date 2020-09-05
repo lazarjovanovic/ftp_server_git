@@ -4,7 +4,6 @@ from watchdog.observers import Observer
 import time
 import _thread
 import os
-from event_handler import ProcessEventHandler
 DATA_DIRECTORY = os.getcwd() + "\\server_files\\"
 
 
@@ -34,11 +33,10 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         f.write(body)
         f.close()
 
-        response = 'Image received, starting processing'.encode()
-
         process_event_handler = ProcessEventHandler()
-        process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image)
+        image_processed, dct_ret = process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image, request_user)
 
+        response = str(dct_ret).encode()
         self.wfile.write(response)
 
 
@@ -53,17 +51,4 @@ def start():
     httpd.serve_forever()
     while True:
         pass
-
-    # watchdog
-    # process_event_handler = ProcessEventHandler()
-    # observer = Observer()
-    # observer.schedule(process_event_handler, DATA_DIRECTORY, recursive=True)
-    #
-    # observer.start()
-    # try:
-    #     while True:
-    #         time.sleep(1)
-    # except KeyboardInterrupt:
-    #     observer.stop()
-    # observer.join()
     print("HTTP Server stoped..")
