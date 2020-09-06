@@ -46,6 +46,7 @@ class ProcessEventHandler(RegexMatchingEventHandler):
         detections = self.process_image(image_path_new, image_path_detected)
         # TODO: get top 3 detections with certainty higher than 50% and sort it
         list_certainities = list()
+        # tmp here
         if len(detections) == 0:
             highest_certainty = 'psoriasis_vulgaris'
             highest_percentage = 100
@@ -53,20 +54,23 @@ class ProcessEventHandler(RegexMatchingEventHandler):
             tmp_dct['desease'] = highest_certainty
             tmp_dct['percentage'] = highest_percentage
             list_certainities.append(tmp_dct)
+            tmp_dct = dict()
+            tmp_dct['desease'] = 'second'
+            tmp_dct['percentage'] = 22
+            list_certainities.append(tmp_dct)
 
         # getting detected desease info from database
         list_ret = list()
-        for item in list_certainities:
+        for i in range(len(list_certainities)):
             cursor = self.conn.cursor()
-            query = 'select * from Deseases where desease_name = \'' + item['desease'] + '\';'
+            query = 'select * from Deseases where desease_name = \'' + list_certainities[i]['desease'] + '\';'
             cursor.execute(query)
             data = cursor.fetchone()
-            ret_dct = dict()
-            ret_dct['desease'] = data[1]
-            ret_dct['percentage'] = item['percentage']
-            ret_dct['description'] = data[2]
-            ret_dct['therapy'] = data[3]
-            list_ret.append(ret_dct)
+            if i == 0:
+                pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage']), data[2], data[3]]
+            else:
+                pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage'])]
+            list_ret.append(pom_lst)
         print('Detecting done')
 
         # logging detection information into database

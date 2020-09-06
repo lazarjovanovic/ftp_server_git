@@ -36,7 +36,14 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         process_event_handler = ProcessEventHandler()
         image_processed, lst_ret = process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image, request_user)
 
-        response = str(lst_ret).encode()
+        str_lst_ret = str(lst_ret)
+        str_lst_ret_list = list(str_lst_ret)
+        for i in range(1, len(str_lst_ret_list)):
+            if str_lst_ret_list[i] == ',' and str_lst_ret_list[i-1] == ']':
+                str_lst_ret_list[i] = ';'
+
+        str_lst_ret = "".join(str_lst_ret_list)
+        response = str_lst_ret.encode()
         self.wfile.write(response)
 
 
