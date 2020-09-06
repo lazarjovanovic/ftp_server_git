@@ -34,9 +34,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         f.close()
 
         process_event_handler = ProcessEventHandler()
-        image_processed, dct_ret = process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image, request_user)
+        image_processed, lst_ret = process_event_handler.process(DATA_DIRECTORY + request_user + '_' + request_image, request_user)
 
-        response = str(dct_ret).encode()
+        response = str(lst_ret).encode()
         self.wfile.write(response)
 
 
