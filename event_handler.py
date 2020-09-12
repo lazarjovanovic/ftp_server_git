@@ -61,6 +61,7 @@ class ProcessEventHandler(RegexMatchingEventHandler):
 
         # getting detected desease info from database
         list_ret = list()
+        str_detections = ''
         for i in range(len(list_certainities)):
             cursor = self.conn.cursor()
             query = 'select * from Deseases where desease_name = \'' + list_certainities[i]['desease'] + '\';'
@@ -70,14 +71,60 @@ class ProcessEventHandler(RegexMatchingEventHandler):
                 pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage']), data[2], data[3]]
             else:
                 pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage'])]
+            str_detections += str(list_certainities[i]['desease']) + ' ' + str(list_certainities[i]['percentage']) + ';'
             list_ret.append(pom_lst)
+        str_detections = str_detections[:-1]
         print('Detecting done')
 
         # logging detection information into database
         cursor = self.conn.cursor()
         time = str(datetime.datetime.now())
-        query = 'insert into Requests values (\'' + str(user) + '\', \'' + time + '\',\'' + image_path_new + '\');'
+        query = 'insert into Requests values (\'' + str(user) + '\', \'' + time + '\',\'' + image_path_new + '\', \'' + str_detections + '\');'
         cursor.execute(query)
         self.conn.commit()
 
         return image_path_detected, list_ret
+
+    def get_processed_imges(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        data = cursor.fetchall()
+        dct_data = dict()
+        for item in data:
+            key = item[2]
+            tmp_dct = dict()
+            tmp_dct['path'] = item[3]
+            tmp_dct['deseases'] = item[4]
+            dct_data[key] = tmp_dct
+        dct_data = dict(sorted(dct_data.items()))
+        dct_data_work = dict()
+        for key in list(reversed(list(dct_data)))[0:5]:
+            dct_data_work[key] = dct_data[key]
+        lst_images = list()
+        lst_data = list()
+        for key in dct_data_work:
+            im = Image.open(open(dct_data_work[key]['path'], 'rb'))
+            lst_images.append(im)
+            list_certainities = list()
+            deseases = dct_data_work[key]['deseases']
+            deseases_parts = deseases.split(';')
+            for d in deseases_parts:
+                d_parts = d.split(' ')
+                dct = {'desease': d_parts[0], 'percentage': d_parts[1]}
+                list_certainities.append(dct)
+
+            lst_one = list()
+            for i in range(len(list_certainities)):
+                cursor = self.conn.cursor()
+                query = 'select * from Deseases where desease_name = \'' + list_certainities[i]['desease'] + '\';'
+                cursor.execute(query)
+                data = cursor.fetchone()
+                if i == 0:
+                    pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage']), data[2],
+                               data[3]]
+                else:
+                    pom_lst = [list_certainities[i]['desease'], str(list_certainities[i]['percentage'])]
+                lst_one.append(pom_lst)
+            lst_data.append(lst_one)
+
+        return lst_images, lst_data

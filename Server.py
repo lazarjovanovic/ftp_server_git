@@ -11,10 +11,19 @@ def hello_world():
     return 'Hello, World!'
 
 
-@app.route('/do_GET_PROCESSED', methods=['GET'])
+@app.route('/do_GET_PROCESSED', methods=['POST'])
 def get_processed():
-    if request.method == 'GET':
-        print('get method got')
+    if request.method == 'POST':
+        print('post method got')
+        request_user = request.headers['username']
+        body = request.form['query']
+        query = body + "\'" + request_user + "\';"
+
+        process_event_handler = ProcessEventHandler()
+        lst_images, lst_data = process_event_handler.get_processed_imges(query)
+
+        x = 5
+
     else:
         print('Bad request sent')
 
@@ -23,12 +32,8 @@ def get_processed():
 def process_image():
     if request.method == 'POST':
         print('post method got')
-        content_length = int(request.headers['Content-Length'])
         request_user = request.headers['username']
-        request_pwd = request.headers['password']
         request_image = request.headers['image']
-        request_method = request.headers['method']
-        request_ip = request.headers['ip']
         body = request.data
 
         f = open(DATA_DIRECTORY + request_user + '_' + request_image, 'wb')
