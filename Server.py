@@ -11,6 +11,14 @@ def hello_world():
     return 'Hello, World!'
 
 
+@app.route('/do_GET_PROCESSED', methods=['GET'])
+def get_processed():
+    if request.method == 'GET':
+        print('get method got')
+    else:
+        print('Bad request sent')
+
+
 @app.route('/do_PROCESS_REQUEST', methods=['POST'])
 def process_image():
     if request.method == 'POST':
@@ -42,4 +50,3 @@ def process_image():
         return response, 200
     else:
         print('Bad request sent')
-
