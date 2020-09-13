@@ -1,9 +1,11 @@
 import os
+
+import pyodbc
 from watchdog.events import RegexMatchingEventHandler
 import json
 from PIL import Image
 from imageai.Detection.Custom import CustomObjectDetection
-import pypyodbc as podbc
+import pyodbc as podbc
 import datetime
 
 
@@ -12,7 +14,11 @@ class ProcessEventHandler(RegexMatchingEventHandler):
 
     def __init__(self):
         super().__init__(self.FILES_REGEX)
-        self.conn = podbc.connect(r'Driver={ODBC Driver 17 for SQL Server};Server=LAZAR-PC;Database=Derma_app_db;Trusted_Connection=yes;')
+        # self.conn = podbc.connect(r'Driver={ODBC Driver 17 for SQL Server};Server=LAZAR-PC;Database=Derma_app_db;Trusted_Connection=yes;')
+        self.conn = pyodbc.connect('Driver={SQL Server};'
+                                   'Server=LAPTOP-KTQV5DSC;'
+                                   'Database=Derma_app_db;'
+                                   'Trusted_Connection=yes;')
 
     # def on_created(self, event):
     #     self.process(event)
@@ -79,7 +85,8 @@ class ProcessEventHandler(RegexMatchingEventHandler):
         # logging detection information into database
         cursor = self.conn.cursor()
         time = str(datetime.datetime.now())
-        query = 'insert into Requests values (\'' + str(user) + '\', \'' + time + '\',\'' + image_path_new + '\', \'' + str_detections + '\');'
+        query = 'insert into Requests values (\'' + str(
+            user) + '\', \'' + time + '\',\'' + image_path_new + '\', \'' + str_detections + '\');'
         cursor.execute(query)
         self.conn.commit()
 
@@ -128,3 +135,19 @@ class ProcessEventHandler(RegexMatchingEventHandler):
             lst_data.append(lst_one)
 
         return lst_images, lst_data
+
+    def register_user(self, username, email, password):
+        cursor = self.conn.cursor()
+        query = 'SELECT Count(*) FROM [Users] WHERE [username] = \'' + username + '\' OR [email] = \'' + email + '\''
+        cursor.execute(query)
+        data = cursor.fetchone()
+
+        if (data[0] == 0):
+            hashValue = str(hash(username))
+            cursor = self.conn.cursor()
+            query = 'INSERT INTO [Users] VALUES (\'' + username + '\', \'' + password + '\', \'' + email + '\',\'' + hashValue + '\')'
+            cursor.execute(query)
+            self.conn.commit()
+            return hashValue
+        else:
+            return ''

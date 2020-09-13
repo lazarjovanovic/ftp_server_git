@@ -1,3 +1,5 @@
+import json
+
 from flask import Flask
 from flask import request
 from event_handler import ProcessEventHandler
@@ -52,6 +54,20 @@ def process_image():
 
         str_lst_ret = "".join(str_lst_ret_list)
         response = str_lst_ret.encode()
+        return response, 200
+    else:
+        print('Bad request sent')
+
+
+@app.route('/do_REGISTER_USER', methods=['POST'])
+def register_user():
+    if request.method == 'POST':
+        body = request.data
+        data = json.loads(body)
+        print(data)
+        process_event_handler = ProcessEventHandler()
+        hashValue = process_event_handler.register_user(data['username'], data['email'], data['password'])
+        response = hashValue.encode()
         return response, 200
     else:
         print('Bad request sent')
