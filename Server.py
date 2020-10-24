@@ -1,6 +1,7 @@
 import json
 
 from flask import Flask
+from flask import jsonify
 from flask import request
 from event_handler import ProcessEventHandler
 import os
@@ -22,10 +23,18 @@ def get_processed():
         query = body + "\'" + request_user + "\';"
 
         process_event_handler = ProcessEventHandler()
-        lst_images, lst_data = process_event_handler.get_processed_imges(query)
+        # lst_images, lst_data = process_event_handler.get_processed_imges(query)
+        json_ret = process_event_handler.get_processed_imges(query)
 
-        x = 5
-
+        # response = str([lst_images, lst_data]).encode()
+        # response_data = str(lst_data).encode()
+        # response_images = bytearray()
+        # for item in lst_images:
+        #     response_images += 'image'.encode() + item
+        # response = response_data + response_images
+        response = json_ret
+        # return response, 200
+        return jsonify(response), 200
     else:
         print('Bad request sent')
 

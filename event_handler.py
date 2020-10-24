@@ -1,12 +1,13 @@
 import os
-
-import pyodbc
+import io
 from watchdog.events import RegexMatchingEventHandler
 import json
 from PIL import Image
 from imageai.Detection.Custom import CustomObjectDetection
+import pyodbc
 import pyodbc as podbc
 import datetime
+# import pypyodbc as pyodbc
 
 
 class ProcessEventHandler(RegexMatchingEventHandler):
@@ -14,11 +15,11 @@ class ProcessEventHandler(RegexMatchingEventHandler):
 
     def __init__(self):
         super().__init__(self.FILES_REGEX)
-        # self.conn = podbc.connect(r'Driver={ODBC Driver 17 for SQL Server};Server=LAZAR-PC;Database=Derma_app_db;Trusted_Connection=yes;')
-        self.conn = pyodbc.connect('Driver={SQL Server};'
-                                   'Server=LAPTOP-KTQV5DSC;'
-                                   'Database=Derma_app_db;'
-                                   'Trusted_Connection=yes;')
+        self.conn = podbc.connect(r'Driver={ODBC Driver 17 for SQL Server};Server=LAZAR-PC;Database=Derma_app_db;Trusted_Connection=yes;')
+        # self.conn = pyodbc.connect('Driver={SQL Server};'
+        #                            'Server=LAPTOP-KTQV5DSC;'
+        #                            'Database=Derma_app_db;'
+        #                            'Trusted_Connection=yes;')
 
     # def on_created(self, event):
     #     self.process(event)
@@ -92,6 +93,12 @@ class ProcessEventHandler(RegexMatchingEventHandler):
 
         return image_path_detected, list_ret
 
+    def image_to_byte_array(self, image):
+        imgByteArr = io.BytesIO()
+        image.save(imgByteArr, format=image.format)
+        imgByteArr = imgByteArr.getvalue()
+        return imgByteArr
+
     def get_processed_imges(self, query):
         cursor = self.conn.cursor()
         cursor.execute(query)
@@ -111,7 +118,8 @@ class ProcessEventHandler(RegexMatchingEventHandler):
         lst_data = list()
         for key in dct_data_work:
             im = Image.open(open(dct_data_work[key]['path'], 'rb'))
-            lst_images.append(im)
+            im_bytes = self.image_to_byte_array(im)
+            lst_images.append(im_bytes)
             list_certainities = list()
             deseases = dct_data_work[key]['deseases']
             deseases_parts = deseases.split(';')
@@ -134,7 +142,17 @@ class ProcessEventHandler(RegexMatchingEventHandler):
                 lst_one.append(pom_lst)
             lst_data.append(lst_one)
 
-        return lst_images, lst_data
+        list_ret = list()
+        for i in range(len(lst_data)):
+            pom_dct = dict()
+            for j in range(len(lst_data[i])):
+                pom_dct[str(j)] = lst_data[i][j]
+                pom_dct['img'] = lst_images[i]
+                list_ret.append(pom_dct)
+
+        # return lst_images, lst_data
+        # json_ret = json.dumps(list_ret)
+        return list_ret
 
     def register_user(self, username, email, password):
         cursor = self.conn.cursor()
@@ -142,7 +160,7 @@ class ProcessEventHandler(RegexMatchingEventHandler):
         cursor.execute(query)
         data = cursor.fetchone()
 
-        if (data[0] == 0):
+        if data[0] == 0:
             hashValue = str(hash(username))
             cursor = self.conn.cursor()
             query = 'INSERT INTO [Users] VALUES (\'' + username + '\', \'' + password + '\', \'' + email + '\',\'' + hashValue + '\')'
